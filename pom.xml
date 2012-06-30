@@ -1,0 +1,58 @@
+<project
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<parent>
+		<groupId>net.petronika</groupId>
+		<artifactId>petronika-parent</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<relativePath>../petronika-parent</relativePath>
+	</parent>
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>net.petronika.jcr</groupId>
+	<artifactId>petronika-jcr-dsl</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<name>petronika-jcr-dsl</name>
+	<url>http://net.petronika.www</url>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.codehaus.groovy</groupId>
+			<artifactId>groovy-all</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.jcr</groupId>
+			<artifactId>jcr</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.jackrabbit</groupId>
+			<artifactId>jackrabbit-jcr-commons</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.jackrabbit</groupId>
+			<artifactId>jackrabbit-jcr-rmi</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.jackrabbit</groupId>
+			<artifactId>jackrabbit-jcr2dav</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+</project>
