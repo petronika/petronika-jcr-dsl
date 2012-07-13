@@ -1,15 +1,13 @@
 package net.petronika.jcr.dsl
 
-import org.junit.BeforeClass
-import org.junit.AfterClass
-import org.junit.Test
+import org.junit.*
 import static org.junit.Assert.*
 
 import javax.jcr.*
 
 import org.apache.jackrabbit.commons.JcrUtils
 
-class JCRBuilderTest {
+class JcrBuilderTest {
 
 	//final static String REPOSITORY_URI = "http://localhost:8080/rmi"
 	final static String REPOSITORY_URI = "http://localhost:8080/server"
@@ -30,14 +28,14 @@ class JCRBuilderTest {
 
 	@Test
 	void testCreation() {
-		JCRBuilder jcr = new JCRBuilder(session)
+		JcrBuilder jcr = new JcrBuilder(session)
 
 		Node root = session.rootNode
 
 		String nodeName
 		Node node
 
-		assertNodesEquals root, jcr.$root(), jcr.$('/'), jcr.'/'(), jcr.$('#' + root.identifier)
+		assertNodesEquals root, jcr.$root(), jcr.$('/'), jcr.'/'(), jcr.$("#${root.identifier}"), jcr."#${root.identifier}"()
 
 		jcr.'test00'()
 		jcr.test01()
@@ -104,7 +102,7 @@ class JCRBuilderTest {
 
 	@Test
 	void testQuerying() {
-		JCRBuilder jcr = new JCRBuilder(session)
+		JcrBuilder jcr = new JcrBuilder(session)
 
 		Node root = session.rootNode
 
@@ -123,7 +121,7 @@ class JCRBuilderTest {
 	static void assertNodesEquals(Node... node) {
 		Node firstNode = node[0]
 		node.each { Node n ->
-			assertEquals n.identifier, firstNode.identifier
+			assertEquals firstNode.identifier, n.identifier
 		}
 	}
 }

@@ -5,35 +5,45 @@ import javax.jcr.query.*
 
 import org.apache.jackrabbit.commons.JcrUtils
 
-class JCRBuilder extends BuilderSupport {
+import net.petronika.jcr.JcrTools
+
+/**
+ * TODO: JavaDoc
+ */
+class JcrBuilder extends BuilderSupport {
 
 	/**
-	 * JCR path separator
-	 */
-	static final String PATH_SEPARATOR = "/"
-
-	/**
-	 * Default node primary type name
-	 */
-	static final String DEFAULT_PRIMARY_TYPE = "nt:unstructured"
-
-	/**
-	 * Node identifier prefix
+	 * A node identifier prefix
 	 */
 	static final String ID_PREFIX = "#"
 
 	private Session session = null
+	private String defaultNamespace = null
 	private QueryManager queryManager = null
 
-	JCRBuilder(Session session, Node parentNode = null) {
+	/*
+	 * -------------------------------------------------------------------------------------
+	 * Construction
+	 * -------------------------------------------------------------------------------------
+	 */
+
+	/**
+	 * TODO: JavaDoc
+	 * 
+	 * @param session
+	 */
+	JcrBuilder(Session session, String defaultNamespace = null) {
 		super()
 		assert session
 		this.session = session
+		this.defaultNamespace = defaultNamespace
 		queryManager = session.workspace.queryManager
 	}
 
 	/*
+	 * -------------------------------------------------------------------------------------
 	 * BuilderSupport overrides
+	 * -------------------------------------------------------------------------------------
 	 */
 
 	/**
@@ -41,7 +51,7 @@ class JCRBuilder extends BuilderSupport {
 	 */
 	@Override
 	protected Object createNode(Object path) {
-		return createJCRNode(path)
+		return createNodeInternal(path)
 	}
 
 	/**
@@ -49,7 +59,7 @@ class JCRBuilder extends BuilderSupport {
 	 */
 	@Override
 	protected Object createNode(Object path, Object primaryTypeName) {
-		return createJCRNode(path, primaryTypeName)
+		return createNodeInternal(path, primaryTypeName)
 	}
 
 	/**
@@ -57,7 +67,7 @@ class JCRBuilder extends BuilderSupport {
 	 */
 	@Override
 	protected Object createNode(Object path, Map properties) {
-		return createJCRNode(path, null, properties)
+		return createNodeInternal(path, null, properties)
 	}
 
 	/**
@@ -65,7 +75,7 @@ class JCRBuilder extends BuilderSupport {
 	 */
 	@Override
 	protected Object createNode(Object path, Map properties, Object primaryTypeName) {
-		return createJCRNode(path, primaryTypeName, properties)
+		return createNodeInternal(path, primaryTypeName, properties)
 	}
 
 	/**
@@ -81,20 +91,23 @@ class JCRBuilder extends BuilderSupport {
 	 * @param path Node identifier (with prefix #) / name / absolute path / relative path
 	 * @return Corresponding node
 	 */
-	protected Node createJCRNode(String path, String primaryTypeName = null, Map properties = null) {
+	protected Node createNodeInternal(String path, String primaryTypeName = null, Map properties = null) {
 		if ( path.startsWith(ID_PREFIX) ) {
 			String id = path[1..path.length()-1]
 			return session.getNodeByIdentifier(id)
 		}
-		if ( path == PATH_SEPARATOR ) {
+		if ( path == JcrTools.PATH_SEPARATOR ) {
 			return session.rootNode
 		}
 		Node parent
-		if ( path.startsWith(PATH_SEPARATOR) ) {
+		if ( path.startsWith(JcrTools.PATH_SEPARATOR) ) {
 			path = path[1..path.length()-1]
 			parent = session.rootNode
 		} else {
 			parent = getCurrent() ?: session.rootNode
+		}
+		if ( primaryTypeName ) {
+			primaryTypeName = applyNamespace(primaryTypeName)
 		}
 		Node node = parent.hasNode(path) ? parent.getNode(path) : primaryTypeName ? parent.addNode(path, primaryTypeName) : parent.addNode(path)
 		properties?.each { key, val ->
@@ -104,6 +117,7 @@ class JCRBuilder extends BuilderSupport {
 	}
 
 	/*
+	 * -------------------------------------------------------------------------------------
 	 * Node creation methods
 	 * 
 	 * Common syntax:
@@ -113,6 +127,7 @@ class JCRBuilder extends BuilderSupport {
 	 * 		properties			optional node properties
 	 * 		closure				optional closure (always last)
 	 * Order of arguments does not matter except for the above cases.
+	 * -------------------------------------------------------------------------------------
 	 */
 
 	Node $(Object node) {
@@ -171,7 +186,9 @@ class JCRBuilder extends BuilderSupport {
 	}
 
 	/*
+	 * -------------------------------------------------------------------------------------
 	 * Session utilities
+	 * -------------------------------------------------------------------------------------
 	 */
 
 	/**
@@ -245,12 +262,14 @@ class JCRBuilder extends BuilderSupport {
 	}
 
 	/*
+	 * -------------------------------------------------------------------------------------
 	 * Finders
+	 * -------------------------------------------------------------------------------------
 	 */
 
 	Node $findByName(String name, String primaryTypeName = null, Node ancestor = null) {
 		if ( !primaryTypeName ) {
-			primaryTypeName = DEFAULT_PRIMARY_TYPE
+			primaryTypeName = JcrTools.DEFAULT_PRIMARY_TYPE
 		}
 		String query
 		if ( !ancestor ) {
@@ -266,7 +285,9 @@ class JCRBuilder extends BuilderSupport {
 	}
 
 	/*
+	 * -------------------------------------------------------------------------------------
 	 * Query utilities
+	 * -------------------------------------------------------------------------------------
 	 */
 
 	Node $queryFirstNode(String query) {
@@ -307,5 +328,18 @@ class JCRBuilder extends BuilderSupport {
 	Iterable<Row> $queryRows(String query) {
 		Query q = queryManager.createQuery(query, Query.JCR_SQL2)
 		return JcrUtils.getRows(q.execute())
+	}
+
+	/*
+	 * -------------------------------------------------------------------------------------
+	 * Utilities
+	 * -------------------------------------------------------------------------------------
+	 */
+
+	protected String applyNamespace(String name) {
+		if ( defaultNamespace && name.indexOf(JcrTools.NAMESPACE_DELIMETER) == -1 ) {
+			name = defaultNamespace + JcrTools.NAMESPACE_DELIMETER + name
+		}
+		return name
 	}
 }
